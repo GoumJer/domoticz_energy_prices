@@ -8,7 +8,7 @@ myHour=$(date +'%H')
 
 
 # Extract prices from today's pricelist in <date>.json
-myPrices=$(cat $myDate.json |jq -r --arg myHour "$myHour" '.data[$myHour |tonumber]|[.datum, .prijs, .prijsZP, .prijsEE, .prijsTI, .prijsFR, .prijsAIP, .prijsEZ, .prijsZG, .prijsNE, .prijsGSL, .prijsANWB, .prijsVON]|@csv'| tr -d '"')
+myPrices=$(cat $myDate.json |jq -r --arg myHour "$myHour" '.data[$myHour |tonumber]|[.datum, .prijs, .prijsZP, .prijsEE, .prijsTI, .prijsFR, .prijsAIP, .prijsEZ, .prijsZG, .prijsNE, .prijsGSL, .prijsANWB, .prijsVON, .prijsMDE]|@csv'| tr -d '"')
 
 # Extract price for each Energy provider
 myDatum=$(echo $myPrices|cut -d, -f1)
@@ -24,6 +24,7 @@ myPriceNE=$(echo $myPrices|cut -d, -f10)
 myPriceGSL=$(echo $myPrices|cut -d, -f11)
 myPriceANWB=$(echo $myPrices|cut -d, -f12)
 myPriceVON=$(echo $myPrices|cut -d, -f13)
+myPriceMDE=$(echo $myPrices|cut -d, -f14)
 
 # Show prices
 echo "Datum/tijd:    "$myDatum
@@ -40,4 +41,4 @@ echo "NextEnergy:    "$myPriceNE
 echo "Groenestroom:  "$myPriceGSL
 echo "ANWB:          "$myPriceANWB
 echo "Vrij op Naam:  "$myPriceVON
-
+echo "Mijn Domein:   "$myPriceMDE
