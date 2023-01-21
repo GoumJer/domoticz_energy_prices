@@ -1,5 +1,9 @@
 # domoticz_energy_prices 
 
+## v0.3  2023-01-21
+- Change of plan on calculating electricity costs (see readme.md)
+
+
 ## v0.2  2023-01-13
 - Added Mijn Domein energy provider
 - Several small cleanup/typo corrections

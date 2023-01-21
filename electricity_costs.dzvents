@@ -1,0 +1,68 @@
+---- devices
+local idxElectricityP1=0            -- Electricity meter device
+local idxCurrentDynamicElPrice=0    -- Actual electricity costs/kWh
+local idxDynamicElCosts=0           -- Daily cumulative electricitycosts
+
+-- user variables
+local idxElDailyFixedFee=0          -- user variable for fixed daily delivery costs incl BTW
+local idxElDailyFixedCosts=0        -- user variable for fixed daily "netbeheer" costs incl BTW
+local idxElEnergyTaxReturn=0        -- user variable for fixed daily "vermindering energiebelasting" incl BTW
+
+
+return {
+	on = {
+		timer = {
+		    'at *:59',   -- trigger to calculate the costs of the past hour (missing 1 minute, added to next hour, except end of day)
+		},
+	},
+
+	data =  {
+            PreviousHrCumElCosts      = { initial = 0},
+            PreviousHrCumElNett       = { initial = 0}
+    },
+
+	logging = {
+		level = domoticz.LOG_INFO,
+		marker = 'Electricity Costs',
+	},
+	
+	execute = function(domoticz, item)
+	    
+		-- Get counter usage values
+	    local todayEl = domoticz.devices(idxElectricityP1).counterToday
+	    local todayElreturn = domoticz.devices(idxElectricityP1).counterDeliveredToday
+	    
+	    if (item.isTimer) then
+    	    -- 1. Calculate nett cumulative daily total (Today usage - Today delivered)
+    	    local todayElNett=domoticz.devices(idxElectricityP1).counterToday-domoticz.devices(idxElectricityP1).counterDeliveredToday
+    	    domoticz.log('counterToday:          ' .. domoticz.devices(idxElectricityP1).counterToday,domoticz.LOG_INFO)
+    	    domoticz.log('counterDeliveredToday: ' .. domoticz.devices(idxElectricityP1).counterDeliveredToday,domoticz.LOG_INFO)
+    	    domoticz.log('todayElNett:           ' .. todayElNett,domoticz.LOG_INFO)
+
+			-- 2. Calculate last hour electricity usage (Today net usage - net usage previous hour)
+    	    local lastHrElNett = todayElNett - domoticz.data.PreviousHrCumElNett
+    	    domoticz.log('lastHrElNett:          ' .. lastHrElNett,domoticz.LOG_INFO)
+			
+    	    -- 3. Calculate the costs and add to device (netto hour usage * current price)
+    	    local lastHrElCosts = lastHrElNett * domoticz.devices(idxCurrentDynamicElPrice).sensorValue
+    	    domoticz.log('Electricityprice       ' .. domoticz.devices(idxCurrentDynamicElPrice).sensorValue,domoticz.LOG_INFO)
+    	    domoticz.log('lastHrElCosts:         ' .. lastHrElCosts,domoticz.LOG_INFO)
+    	    
+			-- 4. Summarize electricity costs (Cumm. Costs until last hour + costs last hour)
+			local CumElCosts = domoticz.utils.round(domoticz.data.PreviousHrCumElCosts + lastHrElCosts,2)
+    	    domoticz.log('CumElCosts:            ' .. CumElCosts,domoticz.LOG_INFO)
+    	    domoticz.devices(idxDynamicElCosts).updateCustomSensor(CumElCosts)
+    	    
+	        
+    	    -- if end of day, reset the cumulative daily totals
+    	    if (tonumber(os.date("%H"))==23) then
+				-- Reset counters, daily costs strats with fixed fee + netbeheercosts - TaxReturn
+    	        domoticz.data.PreviousHrCumElCosts=domoticz.variables(idxElDailyFixedCosts).value + domoticz.variables(idxElDailyFixedFee).value - domoticz.variables(idxElEnergyTaxReturn).value -- variables are including BTW/VAT
+    	        domoticz.data.PreviousHrCumElNett=0
+    	    else -- or else update cumulatives to current values
+    	        domoticz.data.PreviousHrCumElCosts=CumElCosts
+    	        domoticz.data.PreviousHrCumElNett=todayElNett
+    	    end    
+		end	
+	end
+}

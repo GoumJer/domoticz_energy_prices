@@ -1,17 +1,20 @@
-# domoticz_energy_prices v0.2
+# domoticz_energy_prices v0.3
 ## _Jeroen Gouma_
 
 Domoticz_Energy_Prices (aka DEP) is a small set of scripts to perform a hourly update of the electricity prices used for costcalculation in Domoticz. 
 
 Scripts are intended for and tested on a Raspberry Pi or other linux environment.
 
-This is the first update. Improvements can (and will) be made. Suggestions are welcome!
+Sometimes one has to reconsider the plans and go back to the drawingboard. After the previous version I found out it was released a bit to early. I did not take into account the fact that on end of day some counters where reset to 0. Thanks to other scripts I could make a better solution (I think).
 
-Note: Currently scripts calculate only on the variabel tarif. Monthly and yearly fees are not included (yet).
+In the new setup the collection of prices is unchanged, but calculation of the costs is moved inside Domoticz in a dzvents script. The svript now also takes into account the other costs you have to incorporate (netbeheer, teruggave energiebelasting en leveringskosten)
+
+Improvements can (and will) be made. Suggestions are welcome!
+
 
 ## To Do: 
 - Finetuning and cleanup
-- Implement error handling
+- Implement error handling on price collecting
 
 ## Scripts
 - collect_prices.sh
@@ -20,8 +23,8 @@ Collects the prices for tomorrow and saves them for future use by the other scri
 Script to check what the actual prices are that would be send to Domoticz
 - update_domoticz_prices.sh
 Performs the actual update of the dummy-device in Domoticz every hour with the actual price.
-- update_domoticz_costs.sh
-Calculates the electricity costs for the selected provider(s) per hour
+- electricity_costs.dzvents
+Calculates the electricity costs per hour based on variable pricing
 
 ## Installation part 1 (price gathering)
 
@@ -57,25 +60,21 @@ The update script is scheduled on minut 0 of every hour to ensure the dashboard 
 ## Installation part 2 (Cost calculation)
 
 - Create a dummy sensor in Domoticz of type "Custom Sensor" and take a note of the index number. Give it a proper name indicating it's holding the costs of electricity. You can create multiple for multiple providers if required.
-- Open the script update_domoticz_costs.sh and make the following modifcations:
-```
-- on line 15: change the URL to your own Domoticz IP
-- on line 16: change the idx number you use in Domoticz to read data from your meter (aka "Power")
-```
-- Open the file enever.conf in your favourite editor and find the line of the provider(s) you're interested in:
-```
-- Remove the # in front of the line
-- Replace the last 0 on the line with the id of the Custom sensor created earlier
-- Save the file
-```
-- The moment of truth: Run the update_domoticz_costs.sh script and check the results:
-``` ./update_domotiz_costs.sh ```
-- If the feedback contains ``` "status": "OK" ``` everything works as designed.
+- Create 3 user variables in Domoticz:
+    - fixed daily delivery costs incl BTW (DailyFixedFee)
+    - fixed daily "netbeheer" costs incl BTW (DailyFixedCosts)
+    - fixed daily "vermindering energiebelasting" incl BTW (negative value as it is a return) (EnergyTaxReturn)
 
-## Automation
-Also for cost calculation we don't want to act manual if we have crontab. Add the following lines to the crontab the user running domoticz (and change the path to your environment):
+- In Domoticz, create a new dzvents script. Paste the content of the file ```electricity_costs.dzvents``` and make the following modifcations:
 ```
-   # Calculate electricity costs of the last (clock)hour
-       2     *     *    *     *   /home/pi/domoticz/scripts/energy_prices/update_domoticz_costs.sh  >/dev/null 2>&1
+- on line 2: change the idx number you use in Domoticz to read data from your meter (aka "Power")
+- on line 3: change the idx number you use in Domoticz which holds the dynamic electricity price (created in part 1)
+- on line 3: change the idx number you use in Domoticz which holds the cumulative electricity cost (created step 1 of this part)
+- on line 7: change the idx number of the user variable you created for DailyFixedFee
+- on line 8: change the idx number of the user variable you created for DailyFixedCosts
+- on line 9: change the idx number of the user variable you created for EnergyTaxReturn
 ```
-The script is scheduled on minute 2 of every (clock)hour because it needs to total usage of the past hour to enable proper calculation. Do not run it multiple times within 1 hour, because is adds the costs of the previous hour to the costs already on the custom sensor.
+
+Save the file and be patient. The script is scheduled on minute 59 of every (clock)hour because it needs to total usage of the past hour to enable proper calculation. The first (partial) day will have incorrect values, but starting of the next day is should be correct.
+
+Every hour you will also find the relevant data in the Domoticz logfile.
