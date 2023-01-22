@@ -1,5 +1,8 @@
 # domoticz_energy_prices 
 
+## v0.3a  2023-01-22
+- Corrected calculation of daily costs with tax return (which is negative value)
+
 ## v0.3  2023-01-21
 - Change of plan on calculating electricity costs (see readme.md)
 

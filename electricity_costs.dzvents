@@ -57,8 +57,12 @@ return {
     	    -- if end of day, reset the cumulative daily totals
     	    if (tonumber(os.date("%H"))==23) then
 				-- Reset counters, daily costs strats with fixed fee + netbeheercosts - TaxReturn
-    	        domoticz.data.PreviousHrCumElCosts=domoticz.variables(idxElDailyFixedCosts).value + domoticz.variables(idxElDailyFixedFee).value - domoticz.variables(idxElEnergyTaxReturn).value -- variables are including BTW/VAT
+    	        domoticz.data.PreviousHrCumElCosts=domoticz.variables(idxElDailyFixedCosts).value + domoticz.variables(idxElDailyFixedFee).value + domoticz.variables(idxElEnergyTaxReturn).value -- variables are including BTW/VAT
     	        domoticz.data.PreviousHrCumElNett=0
+				domoticz.log('Reset daily costs: ' ,domoticz.LOG_INFO)
+                domoticz.log('DailyFixedCosts:   ' .. domoticz.variables(idxElDailyFixedCosts).value,domoticz.LOG_INFO)    	        
+                domoticz.log('DailyFixedFee:     ' .. domoticz.variables(idxElDailyFixedFee).value,domoticz.LOG_INFO)    	        
+                domoticz.log('EnergyTaxReturn:   ' .. domoticz.variables(idxElEnergyTaxReturn).value,domoticz.LOG_INFO)   
     	    else -- or else update cumulatives to current values
     	        domoticz.data.PreviousHrCumElCosts=CumElCosts
     	        domoticz.data.PreviousHrCumElNett=todayElNett
