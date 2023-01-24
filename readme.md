@@ -1,4 +1,4 @@
-# domoticz_energy_prices v0.3
+# domoticz_energy_prices v0.3b
 ## _Jeroen Gouma_
 
 Domoticz_Energy_Prices (aka DEP) is a small set of scripts to perform a hourly update of the electricity prices used for costcalculation in Domoticz. 
@@ -27,13 +27,14 @@ Performs the actual update of the dummy-device in Domoticz every hour with the a
 Calculates the electricity costs per hour based on variable pricing
 
 ## Installation part 1 (price gathering)
-
+- Go to https://enever.nl and create a token (it's free).
+- Edit the script ```collect_prices.sh``` and add your token on line 3.
 - Create a dummy sensor in Domoticz of type "Custom Sensor" and take a note of the index number. Give it a proper name indicating it's holding the actual price of electricity.
 - Create a folder on your domoticz environment and put all files in there. 
  I use ```/home/pi/domoticz/scripts/energy_prices/ ```
 - Make the scripts executable (```chmod 755 *.sh```)
-- Execute the command below in the same folder to collect today's pricing:
-    ``` wget -O $(date +'%Y%m%d').json2 https://enever.nl/feed/stroomprijs_vandaag.php```
+- Execute the command below in the same folder to collect today's pricing (replace the XXXXXX string with your token):
+    ``` wget -O $(date +'%Y%m%d').json2 https://enever.nl/feed/stroomprijs_vandaag.php?token=XXXXXXXXX```
 - Execute the show_prices script to validate the output:
 ``` ./show_prices.sh ```
 - If all looks fine open the script update_domoticz_prices.sh and make the following modifcations:
