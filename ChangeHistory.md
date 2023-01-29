@@ -1,5 +1,8 @@
 # domoticz_energy_prices 
 
+## v0.3c  2023-01-24
+ - small change in enever api url for collecting prices.
+
 ## v0.3b  2023-01-24
  - Enever.nl announced that starting feb 15 2023 you will need a token (still free) to get data from their feed. The script collect_prices.sh has been updated to facilitate this.
 
